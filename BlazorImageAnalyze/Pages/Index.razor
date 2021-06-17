@@ -1,0 +1,86 @@
+﻿@page "/"
+@using BlazorInputFile
+@using System.IO
+@using Microsoft.Azure.CognitiveServices.Vision.ComputerVision
+@inject Microsoft.Extensions.Configuration.IConfiguration config
+@using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models
+
+<h1>Hello, Azure Cognitive Services</h1>
+
+<h3>Welcome to Compupuer Vision...</h3>
+
+<label class="btn btn-secondary" for="input">Choose Image to analyze!</label>
+
+<InputFile OnChange="async(files) => await Analyze(files)" id="input" style="display: none;">
+
+</InputFile>
+
+<img class="d-block" src="data:image/jpg;base64,@base64image" />
+
+@if(imageAnalysis != null)
+{
+<div class="alert alert-info">
+    <h2>@imageAnalysis.Description.Captions.First().Text</h2>
+
+    <h4>Tags</h4>
+    @foreach (var item in imageAnalysis.Tags.OrderByDescending(s => s.Confidence))
+    {
+        <p class="d-block">@item.Name @item.Confidence</p>
+    }
+
+</div>
+
+}
+
+@code{
+
+    // Add your Computer Vision subscription key and endpoint
+    string key = Environment.GetEnvironmentVariable("COMPUTER_VISION_SUBSCRIPTION_KEY_HERE");
+    string endPoint = Environment.GetEnvironmentVariable("COMPUTER_VISION_ENDPOINT");
+
+    string base64image;
+
+    ComputerVisionClient ComputerVisionClient;
+
+    MemoryStream memoryStream;
+
+    ImageAnalysis imageAnalysis;
+
+    IList<VisualFeatureTypes?> visualFeatures;
+
+    protected override async Task OnInitializedAsync()
+    {
+        memoryStream = new MemoryStream();
+        ComputerVisionClient = new ComputerVisionClient(new ApiKeyServiceClientCredentials(key))
+        {
+            Endpoint = endPoint
+        };
+
+
+    }
+
+    public async Task Analyze(IFileListEntry[] files)
+    {
+        var features = new List<VisualFeatureTypes?>()
+            {
+                VisualFeatureTypes.Adult,
+                VisualFeatureTypes.Brands,
+                VisualFeatureTypes.Categories,
+                VisualFeatureTypes.Color,
+                VisualFeatureTypes.Description,
+                VisualFeatureTypes.Faces,
+                VisualFeatureTypes.ImageType,
+                VisualFeatureTypes.Objects,
+                VisualFeatureTypes.Tags
+
+            };
+
+        await files.First().Data.CopyToAsync(memoryStream);
+        base64image = Convert.ToBase64String(memoryStream.ToArray());
+        memoryStream.Position = 0;
+
+        imageAnalysis  = await ComputerVisionClient.AnalyzeImageInStreamAsync(memoryStream, visualFeatures: features);
+        StateHasChanged();
+
+    }
+}

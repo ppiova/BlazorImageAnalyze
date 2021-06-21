@@ -1,9 +1,10 @@
 ﻿@page "/"
 @using BlazorInputFile
-@using System.IO
 @using Microsoft.Azure.CognitiveServices.Vision.ComputerVision
-@inject Microsoft.Extensions.Configuration.IConfiguration config
 @using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models
+@using System.IO
+@inject Microsoft.Extensions.Configuration.IConfiguration config
+
 
 <h1>Hello, Azure Cognitive Services</h1>
 
@@ -11,24 +12,24 @@
 
 <label class="btn btn-secondary" for="input">Choose Image to analyze!</label>
 
-<InputFile OnChange="async(files) => await Analyze(files)" id="input" style="display: none;">
+<InputFile OnChange="async(image) => await Analyze(image)" id="input" style="display: none;">
 
 </InputFile>
 
 <img class="d-block" src="data:image/jpg;base64,@base64image" />
 
-@if(imageAnalysis != null)
+@if (imageAnalysis != null)
 {
-<div class="alert alert-info">
-    <h2>@imageAnalysis.Description.Captions.First().Text</h2>
+    <div class="alert alert-info">
+        <h2>@imageAnalysis.Description.Captions.First().Text</h2>
 
-    <h4>Tags</h4>
-    @foreach (var item in imageAnalysis.Tags.OrderByDescending(s => s.Confidence))
-    {
-        <p class="d-block">@item.Name @item.Confidence</p>
-    }
+        <h4>Tags</h4>
+        @foreach (var item in imageAnalysis.Tags.OrderByDescending(s => s.Confidence))
+        {
+            <p class="d-block">@item.Name @item.Confidence</p>
+        }
 
-</div>
+    </div>
 
 }
 
@@ -59,10 +60,10 @@
 
     }
 
-    public async Task Analyze(IFileListEntry[] files)
+    public async Task Analyze(IFileListEntry[] image)
     {
         var features = new List<VisualFeatureTypes?>()
-            {
+    {
                 VisualFeatureTypes.Adult,
                 VisualFeatureTypes.Brands,
                 VisualFeatureTypes.Categories,
@@ -75,11 +76,11 @@
 
             };
 
-        await files.First().Data.CopyToAsync(memoryStream);
+        await image.First().Data.CopyToAsync(memoryStream);
         base64image = Convert.ToBase64String(memoryStream.ToArray());
         memoryStream.Position = 0;
 
-        imageAnalysis  = await ComputerVisionClient.AnalyzeImageInStreamAsync(memoryStream, visualFeatures: features);
+        imageAnalysis = await ComputerVisionClient.AnalyzeImageInStreamAsync(memoryStream, visualFeatures: features);
         StateHasChanged();
 
     }

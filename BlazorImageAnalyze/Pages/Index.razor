@@ -20,16 +20,32 @@
 
 @if (imageAnalysis != null)
 {
-    <div class="alert alert-info">
-        <h2>@imageAnalysis.Description.Captions.First().Text</h2>
+<div class="alert alert-info">
+    <h2>@imageAnalysis.Description.Captions.First().Text</h2>
 
-        <h4>Tags</h4>
-        @foreach (var item in imageAnalysis.Tags.OrderByDescending(s => s.Confidence))
+    <h3>Tags</h3>
+    @foreach (var item in imageAnalysis.Tags.OrderByDescending(s => s.Confidence))
+    {
+        <p class="d-block">@item.Name @item.Confidence</p>
+    }
+    <h2>Colors Scheme:</h2>
+    <h5>Is Black and White?:@imageAnalysis.Color.IsBWImg </h5>
+
+    <h5>Dominant background color:@imageAnalysis.Color.DominantColorBackground </h5>
+    <h5>Dominant foreground color:@imageAnalysis.Color.DominantColorForeground </h5>
+    <h5>Dominant colors: @string.Join(",", imageAnalysis.Color.DominantColors) </h5>
+
+    @if (imageAnalysis.Faces != null)
+    {
+        <h4>Faces</h4>
+        @foreach (var face in imageAnalysis.Faces)
         {
-            <p class="d-block">@item.Name @item.Confidence</p>
+            <p class="d-block">Genero: @face.Gender and Age:@face.Age</p>
+           
         }
 
-    </div>
+    }
+</div>
 
 }
 
